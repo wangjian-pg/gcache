@@ -263,6 +263,22 @@ func (c *ARC) Remove(key interface{}) bool {
 	return c.remove(key)
 }
 
+func (c *ARC) RemoveLeastUsed() bool {
+	var key interface{}
+	c.mu.Lock()
+	if elt := c.t1.Tail(); elt != nil {
+		key = elt.Value
+	} else if elt := c.t2.Tail(); elt != nil {
+		key = elt.Value
+	}
+	c.mu.Unlock()
+	if key != nil {
+		return c.Remove(key)
+	} else {
+		return false
+	}
+}
+
 func (c *ARC) remove(key interface{}) bool {
 	if elt := c.t1.Lookup(key); elt != nil {
 		c.t1.Remove(key, elt)
@@ -411,6 +427,10 @@ func (al *arcList) RemoveTail() interface{} {
 	delete(al.keys, key)
 
 	return key
+}
+
+func (al *arcList) Tail() *list.Element {
+	return al.l.Back()
 }
 
 func (al *arcList) Len() int {
